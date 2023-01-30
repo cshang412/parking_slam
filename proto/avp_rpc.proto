@@ -1,0 +1,58 @@
+syntax = "proto2";
+
+package parking_slam.rpc;
+
+enum Req {
+    MAPPING         = 0; 
+    LOCALIZATION    = 1; 
+    STOP            = 2;
+    RESET           = 3;
+    SAVE            = 4;
+}
+
+enum Rsp{
+    OK        = 0;
+    ERROR     = 1;
+}
+
+message Vec3f {
+    required float x = 1;
+    required float y = 2;
+    required float z = 3;
+}
+
+message Quatf
+{
+    required float   x = 1;
+    required float   y = 2;
+    required float   z = 3;
+    required float   w = 4;
+}
+
+message Pose
+{
+    required double timestamp   = 1;
+    required int32  rtk_status  = 2;
+    required Quatf  rotation    = 3;
+    required Vec3f  translation = 4;
+}
+
+
+message AVPResult
+{
+    required double       timestamp  = 1;    
+
+    repeated Vec3f        cloud      = 2;
+
+    repeated Pose         trajectory = 3;
+}
+
+message AVPReq
+{
+    required Req        req      = 1;
+}
+
+message AVPRsp
+{
+    required Rsp        rsp      = 1;
+}

@@ -1,0 +1,177 @@
+syntax = "proto2";
+
+package parking_slam;
+
+enum Mode {
+    MAPPING      = 0; 
+    LOCALIZATION = 1;
+    LIO          = 2;
+}
+
+enum LidarType{
+    M1        = 0;
+    Center128 = 1;
+}
+
+enum RegistrationType{
+    VOXEL_GICP        = 0;
+    FEATURE_ICP       = 1;
+}
+
+enum MapType {
+    PROTO16      = 0; 
+    PROTO32      = 1;
+}
+
+message SensorConfig{
+    required LidarType    lidar_type                           = 1[default=M1];
+    required double       acc_noise                            = 2[default=1e-1];
+    required double       gyr_noise                            = 3[default=1e-2];
+    required double       acc_w_noise                          = 4[default=5e-3];
+    required double       gyr_w_noise                          = 5[default=1e-4];
+}
+
+message RegistrationConfig{
+    required RegistrationType registration_type                      = 1[default=VOXEL_GICP];
+    required int32            thresh_icp_max_iteration               = 2[default=35];
+    required double           thresh_icp_error                       = 3[default=0.001];
+    required double           thresh_fitness_score                   = 4[default=0.5];
+    required double           thresh_overlap                         = 5[default=0.5];
+    required double           thresh_invalid_registration_ratio      = 6[default=0.5];
+    required double           thresh_init_loc_fitness_score          = 7[default=0.5];
+    required double           thresh_init_loc_overlap                = 8[default=0.5];
+    required double           thresh_diff_angle                      = 9[default=2.0];
+    required double           thresh_diff_translation                = 10[default=1.0];
+    required double           thresh_diff_angle_graph_build          = 11[default=2.0];
+    required double           thresh_diff_translation_graph_build    = 12[default=1.0];
+}
+
+message PoseBetweenNoise{
+    required double r = 1[default=1e-6];
+
+    required double t = 2[default=5e-3];
+}
+
+message LoopNoise{
+    required double r = 1[default=1e-6];
+
+    required double t = 2[default=1e-5];
+}
+
+message ZeroRotBiasVelocityNoise{
+    required double acc = 1[default=1e-2];
+
+    required double gyr = 4[default=1e-6];
+}
+
+message BodyVelocityNoise{
+    required double x = 1[default=4e-2];
+    required double y = 2[default=1e-2];
+    required double z = 3[default=1e-4];
+}
+
+message PriorPoseNoise{
+    required double r_x = 1[default=3e-4];
+    required double r_y = 2[default=3e-4];
+    required double r_z = 3[default=3e-4];
+
+    required double t_x = 4[default=1e-4];
+    required double t_y = 5[default=1e-4];
+    required double t_z = 6[default=1e-4];
+}
+
+message FactorNoise{
+    required PoseBetweenNoise         pose_between_noise           = 1;
+    required double                   zero_velocity_noise          = 2[default=1e-4];
+    required ZeroRotBiasVelocityNoise zero_rot_bias_velocity_noise = 3;
+    required BodyVelocityNoise        body_velocity_noise          = 4;
+    required double                   wheel_scale_noise            = 5[default=1e-4];
+    required PriorPoseNoise           prior_pose_noise             = 6;
+    required double                   prior_imu_bias_noise         = 7[default=1e-3];
+    required double                   prior_velocity_noise         = 8[default=4e-2];
+    required double                   prior_wheel_scale_noise      = 9[default=1e-3];
+    required LoopNoise                loop_noise                   = 10;
+}
+
+message GraphBuilderConfig{
+    required double       thresh_keyframe_distance                  = 1[default=20.0];
+    required double       thresh_keyframe_yaw                       = 2[default=360.0];
+    required double       thresh_odometry_distance                  = 3[default=0.1];
+    required double       thresh_odometry_angle                     = 4[default=1.0];
+    required double       thresh_loop_distance                      = 5[default=0.5];
+    required double       thresh_loop_angle                         = 6[default=3.0];
+    required double       thresh_loc_distance                       = 7[default=1.0];
+    required double       thresh_loc_yaw                            = 8[default=1.0];
+
+    required bool         enable_marginalized                       = 9[default=true];
+    required bool         enable_loop_closure_factor                = 10[default=true];
+    required bool         enable_pose_between_factor                = 11[default=true];
+    required bool         enable_keyframe_to_map_factor             = 12[default=true];
+
+    required bool         enable_imu_factor                         = 13[default=true];
+    required bool         enable_wheel_scale_factor                 = 14[default=true];
+    required bool         enable_imu_bias_factor                    = 15[default=true];
+    required bool         enable_zero_velocity_factor               = 16[default=true];
+    required bool         enable_zero_rot_bias_velocity_factor      = 17[default=true];
+    required bool         enable_body_velocity_factor               = 18[default=true];
+
+    required FactorNoise  factor_noise                              = 19;
+
+    required int32        max_num_state_in_graph                    = 20[default=-1];  
+}
+
+message LoopClosureDetectionConfig{
+    required double            thresh_timestamp_diff = 1[default=20.0];
+    required double            thresh_distance       = 2[default=40.0];
+    required double            thresh_z_diff         = 3[default=2.0];
+    required double            thresh_total_length   = 4[default=11.0];
+    required double            thresh_iou            = 5[default=0.4];
+}
+
+message MapProcessConfig{
+    required string  map_path                           = 1[default="/home"];
+    required double  max_distance                       = 2[default=60.0];
+    required double  max_z                              = 3[default=2.0];
+    required MapType map_type                           = 4[default=PROTO32];
+    required bool    save_cloud_ply                     = 5[default=true];
+    required bool    save_trajectory_ply                = 6[default=true];
+    required bool    save_avp_map                       = 7[default=true];
+    required int32   saved_max_map_num                  = 8[default=100];
+    required string  saved_map_database_name            = 9[default="/map"];
+    required string  saved_map_name                     = 10[default="2022.12.09"];
+}
+
+message RpcConfig
+{
+    required bool                       enable                         = 1[default=true];
+    required string                     rpc_ip                         = 2[default="127.0.0.1"];
+}
+
+message InitializeConfig
+{
+    required double     thresh_global_pitch_angle                 = 1[default=1.0];
+    required int32      nearest_ksearch_num                       = 2[default=3];
+    required double     thresh_nearest_ksearch_max_angle          = 3[default=1.0];
+    required double     thresh_nearest_ksearch_max_dist           = 4[default=1.0];
+}
+
+message ParkingSLAMConfig{
+    required Mode                       mode                           = 1[default=MAPPING];
+
+    required SensorConfig               sensor_config                  = 2;
+    required RegistrationConfig         registration_config            = 3;
+
+    required GraphBuilderConfig         graph_builder_config           = 4;
+
+    required LoopClosureDetectionConfig loop_closure_detection_config  = 5;
+
+    required bool                       visualizer_show_map            = 6[default=true];
+
+    required MapProcessConfig           map_process_config             = 7;
+
+    required RpcConfig                  rpc_config                     = 8;
+
+    required InitializeConfig           initialize_config              = 9;
+
+    required bool                       silent_mapping                 = 10;
+}

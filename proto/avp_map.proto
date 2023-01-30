@@ -1,0 +1,113 @@
+syntax = "proto2";
+
+package parking_slam.map;
+
+message Cov{
+    required float x00 = 1;
+    required float x01 = 2;
+    required float x02 = 3;
+
+    required float x11 = 4;
+    required float x12 = 5;
+
+    required float x22 = 6;
+}
+
+message Covfp16{
+    required uint32 x00 = 1;
+    required uint32 x01 = 2;
+    required uint32 x02 = 3;
+
+    required uint32 x11 = 4;
+    required uint32 x12 = 5;
+
+    required uint32 x22 = 6;
+}
+
+message Vec3i {
+    required int32 x = 1;
+    required int32 y = 2;
+    required int32 z = 3;
+}
+
+message Vec3f {
+    required float x = 1;
+    required float y = 2;
+    required float z = 3;
+}
+
+message Vec3d {
+    required double x = 1;
+    required double y = 2;
+    required double z = 3;
+}
+
+message Vec3fp16 {
+    required uint32 x = 1;
+    required uint32 y = 2;
+    required uint32 z = 3;
+}
+
+message Quatf
+{
+    required float   x = 1;
+    required float   y = 2;
+    required float   z = 3;
+    required float   w = 4;
+}
+
+message Quatd
+{
+    required double   x = 1;
+    required double   y = 2;
+    required double   z = 3;
+    required double   w = 4;
+}
+
+message Pose
+{
+    required double timestamp   = 1;
+    required int32  rtk_status  = 2;
+    required Quatf  rotation    = 3;
+    required Vec3f  translation = 4;
+    required Vec3d  euler_angle = 5;
+    required Vec3d  llh         = 6;
+}
+
+message Voxel {
+    required Vec3f point      = 1;
+    required Vec3i corr       = 2;
+    required Cov   cov        = 3;
+    required int32 num_points = 4;
+}
+
+message Voxelfp16 {
+    required Vec3fp16 point      = 1;
+    required Vec3i corr       = 2;
+    required Covfp16   cov        = 3;
+    required int32 num_points = 4;
+}
+
+message VoxelMap {
+    repeated Voxel voxels = 1;
+}
+
+message VoxelMapfp16 {
+    repeated Voxelfp16 voxels = 1;
+}
+
+
+message AVPMap
+{
+    required double       timestamp  = 1;
+
+    required Vec3d        boot_llh   = 2;
+
+    required double       length     = 3;
+
+    optional VoxelMap     map_fp32   = 4;
+
+    optional VoxelMapfp16 map_fp16   = 5;
+
+    repeated Pose         trajectory = 6;
+}
